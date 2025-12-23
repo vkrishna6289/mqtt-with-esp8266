@@ -1,0 +1,19 @@
+#define IR_SENSOR_PIN 5   // GPIO5 (D1)
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(IR_SENSOR_PIN, INPUT);
+  Serial.println("IR Sensor Test Started");
+}
+
+void loop() {
+  int irState = digitalRead(IR_SENSOR_PIN);
+
+  if (irState == LOW) {
+    Serial.println("Object DETECTED");
+  } else {
+    Serial.println("Object NOT detected");
+  }
+
+  delay(500);  // half-second delay
+}
