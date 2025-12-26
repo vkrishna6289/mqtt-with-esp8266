@@ -1,0 +1,70 @@
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+
+#define IR_PIN ## // enter the pin for ir sensor
+
+// WiFi credentials
+const char* ssid = "############";
+const char* password = "#############";
+
+// MQTT Broker
+const char* mqtt_server = "broker.hivemq.com";
+const char* topic = "esp8266/ir";
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+void setupWiFi() {
+  delay(10);
+  Serial.print("Connecting to WiFi");
+
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("\nWiFi connected");
+  Serial.println(WiFi.localIP());
+}
+
+void reconnectMQTT() {
+  while (!client.connected()) {
+    Serial.print("Connecting to MQTT...");
+    if (client.connect("ESP8266_IR_Client")) {
+      Serial.println("Connected");
+    } else {
+      Serial.print("Failed, rc=");
+      Serial.print(client.state());
+      delay(2000);
+    }
+  }
+}
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(IR_PIN, INPUT);
+
+  setupWiFi();
+  client.setServer(mqtt_server, 1883);
+}
+
+void loop() {
+  if (!client.connected()) {
+    reconnectMQTT();
+  }
+  client.loop();
+
+  int irValue = digitalRead(IR_PIN);
+
+  if (irValue == LOW) {
+    client.publish(topic, "Object Detected");
+    Serial.println("Object Detected");
+  } else {
+    client.publish(topic, "No Object");
+    Serial.println("No Object");
+  }
+
+  delay(2000);
+}
+
